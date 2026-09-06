@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {slideBoard,canMove,winner,neighbors,toggleLights,slidePuzzle,makePuzzle} from '../lib/game-logic.mjs';
+test('2048 merges once per tile and awards merged values',()=>{const r=slideBoard([2,2,2,2,...Array(12).fill(0)],'left');assert.deepEqual(r.board.slice(0,4),[4,4,0,0]);assert.equal(r.score,8);assert.equal(r.changed,true)});
+test('2048 supports all four directions',()=>{const b=[2,0,0,0,...Array(12).fill(0)];assert.equal(slideBoard(b,'right').board[3],2);assert.equal(slideBoard(b,'down').board[12],2);assert.equal(slideBoard(b,'up').changed,false);assert.equal(slideBoard(b,'left').changed,false)});
+test('2048 recognizes blocked boards and legal merges',()=>{const b=[2,4,2,4,4,2,4,2,2,4,2,4,4,2,4,2];assert.equal(canMove(b),false);b[0]=4;assert.equal(canMove(b),true)});
+test('Tic Tac Toe detects diagonals, rows and draws',()=>{assert.equal(winner(['x','','','','x','','','','x']),'x');assert.equal(winner(['o','o','o','','','','','','']),'o');assert.equal(winner(['x','o','x','x','o','o','o','x','x']),null)});
+test('Minesweeper neighbors never wrap across rows',()=>{assert.deepEqual(neighbors(0,8),[1,8,9]);assert.deepEqual(neighbors(7,8),[6,14,15]);assert.equal(neighbors(27,8).length,8)});
+test('Lights Out moves are reversible and do not wrap',()=>{const b=Array(25).fill(false);const n=toggleLights(b,4);assert.deepEqual(n.flatMap((v,i)=>v?[i]:[]),[3,4,9]);assert.deepEqual(toggleLights(n,4),b)});
+test('Slide 15 only allows adjacent tiles',()=>{const b=Array.from({length:16},(_,i)=>(i+1)%16);assert.equal(slidePuzzle(b,0),b);assert.equal(slidePuzzle(b,12),b);assert.equal(slidePuzzle(b,14)[15],15)});
+test('Generated Slide 15 puzzles preserve all tiles and solvability',()=>{for(let k=0;k<100;k++){const b=makePuzzle();assert.deepEqual([...b].sort((a,b)=>a-b),Array.from({length:16},(_,i)=>i));const n=b.filter(Boolean);let inversions=0;for(let i=0;i<n.length;i++)for(let j=i+1;j<n.length;j++)if(n[i]>n[j])inversions++;const rowFromBottom=4-Math.floor(b.indexOf(0)/4);assert.equal((inversions+rowFromBottom)%2,1)}});
